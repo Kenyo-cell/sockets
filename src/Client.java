@@ -4,37 +4,20 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
-public class Client implements Runnable{
-    private String host;
-    private int port;
-    private PrintWriter out;
-    private BufferedReader in;
+public class Client {
+    private static int PORT = 2021;
+    private static String HOST = "127.0.0.1";
 
-    public Client(String host, int port) {
-        this.host = host;
-        this.port = port;
-    }
 
-    private void reply(String msg) {
-        out.println(msg);
-    }
+    public static void main(String[] args) {
+        try (Socket server = new Socket(HOST, PORT);
+             BufferedReader console = new BufferedReader(
+                     new InputStreamReader(System.in));
+             BufferedReader in = new BufferedReader(
+                     new InputStreamReader(server.getInputStream()));
+             PrintWriter out = new PrintWriter(server.getOutputStream())
+        ) {
 
-    private void closeAll() {
-        out.close();
-        try {
-            in.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void run() {
-        try (Socket server = new Socket(host, port);
-             BufferedReader console = new BufferedReader(new InputStreamReader(System.in))) {
-
-            out = new PrintWriter(server.getOutputStream(), true);
-            in = new BufferedReader(new InputStreamReader(server.getInputStream()));
             String msg = "";
 
             System.out.println("Connected ro server and got IO streams");
@@ -43,14 +26,14 @@ public class Client implements Runnable{
                 System.out.println(in.readLine());
                 msg = console.readLine();
                 out.println(msg);
-                if (msg.equals("end")) break;
+                out.flush();
+                if (msg.equalsIgnoreCase("end")) break;
             }
 
         } catch (IOException e) {
             e.printStackTrace();
         }
         finally {
-            closeAll();
             System.out.println("Disconnected");
         }
     }
